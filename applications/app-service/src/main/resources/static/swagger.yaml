@@ -1,0 +1,72 @@
+openapi: 3.0.3
+info:
+  title: Crediya Loan Application MS
+  description: API for submitting loan applications to Crediya.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+tags:
+  - name: Loan Applications
+    description: Operations related to loan applications
+
+paths:
+  /api/v1/solicitud:
+    post:
+      tags: [Loan Applications]
+      summary: Submit a new loan application
+      operationId: submitLoanApplication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoanApplicationRequest"
+      responses:
+        "201":
+          description: Loan application created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoanApplicationResponse"
+        "400":
+          description: Invalid request payload
+
+components:
+  schemas:
+    LoanApplicationRequest:
+      type: object
+      properties:
+        customerId:
+          type: string
+          description: Customer identification document number
+        amount:
+          type: number
+          format: double
+          description: Requested loan amount
+        term:
+          type: integer
+          description: Loan term in months
+        loanType:
+          type: string
+          description: Type of loan requested (e.g., personal, mortgage, vehicle)
+      required:
+        - customerId
+        - amount
+        - term
+        - loanType
+
+    LoanApplicationResponse:
+      type: object
+      properties:
+        applicationId:
+          type: string
+          description: Unique identifier of the loan application
+        status:
+          type: string
+          description: Initial status of the application
+          example: Pending Review
+      required:
+        - applicationId
+        - status
