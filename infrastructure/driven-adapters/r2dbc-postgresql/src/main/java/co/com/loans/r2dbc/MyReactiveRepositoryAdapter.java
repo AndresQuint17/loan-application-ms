@@ -1,10 +1,12 @@
 package co.com.loans.r2dbc;
 
 import co.com.loans.model.loanapplication.LoanApplication;
+import co.com.loans.model.loanapplication.gateways.LoanApplicationRepository;
 import co.com.loans.r2dbc.entity.LoanApplicationEntity;
 import co.com.loans.r2dbc.helper.ReactiveAdapterOperations;
 import org.reactivecommons.utils.ObjectMapper;
 import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Mono;
 
 @Repository
 public class MyReactiveRepositoryAdapter extends ReactiveAdapterOperations<
@@ -12,7 +14,7 @@ public class MyReactiveRepositoryAdapter extends ReactiveAdapterOperations<
         LoanApplicationEntity/* change for adapter model */,
         Long,
         MyReactiveRepository
-        > {
+        > implements LoanApplicationRepository {
     public MyReactiveRepositoryAdapter(MyReactiveRepository repository, ObjectMapper mapper) {
         /**
          *  Could be use mapper.mapBuilder if your domain model implement builder pattern
@@ -22,4 +24,8 @@ public class MyReactiveRepositoryAdapter extends ReactiveAdapterOperations<
         super(repository, mapper, domainEntity -> mapper.map(domainEntity, LoanApplication.class/* change for domain model */));
     }
 
+    @Override
+    public Mono<LoanApplication> registerLoanApplication(LoanApplication loanApplication) {
+        return Mono.just(new LoanApplication(150000.0, 36, "test@mail.com", 1L, 1L));
+    }
 }

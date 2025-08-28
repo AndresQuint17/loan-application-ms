@@ -1,34 +1,36 @@
 package co.com.loans.api;
 
+import co.com.loans.api.mapper.LoanMapper;
 import co.com.loans.api.model.LoanApplicationRequest;
 import co.com.loans.api.model.LoanApplicationResponse;
+import co.com.loans.model.loanapplication.LoanApplication;
+import co.com.loans.usecase.registerLoanApplication.RegisterLoanApplicationUseCase;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 @Log4j2
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Component
 public class LoanApplicationsApiHandler {
-//    private final UseCase someUseCase;
+    private final RegisterLoanApplicationUseCase registerLoanApplicationUseCase;
+    private final LoanMapper loanMapper;
 
     public Mono<ServerResponse> submitLoanApplication(ServerRequest serverRequest) {
         return serverRequest.bodyToMono(LoanApplicationRequest.class)
-                .flatMap(body -> submitLoanApplicationMock()) // TODO: Call real use case here -> someUseCase.some()
-                .flatMap(response -> ServerResponse.ok().bodyValue(response)); // TODO: Customize response here
-    }
-
-    private Mono<LoanApplicationResponse> submitLoanApplicationMock() { // TODO: Remove this mock method
-        return Mono.fromSupplier(() -> {
-            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-            try {
-                return mapper.readValue("{\n  \"applicationId\" : \"applicationId\",\n  \"status\" : \"Pending Review\"\n}", LoanApplicationResponse.class);
-            } catch (Exception e) {
-                throw new RuntimeException("Cannot parse example to LoanApplicationResponse");
-            }
-        });
+                .flatMap(requestDto -> {
+                    String userIdCard = requestDto.idCard();
+                    return Mono.just(requestDto)
+                            .flatMap(dto -> {
+                                LoanApplication loanApplication = loanMapper.toDomain(dto);
+                                return registerLoanApplicationUseCase.registerLoanApplication(userIdCard, loanApplication)
+                                        .map(loanMapper::toLoanApplicationResponse);
+                            });
+                })
+                .flatMap(response -> ServerResponse.ok().bodyValue(response));
     }
 }
