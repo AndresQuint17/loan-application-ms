@@ -17,7 +17,9 @@ import lombok.Setter;
 @Schema(description = "Response object for a loan application submission")
 public class LoanApplicationResponse {
     /*@Schema(description = "Unique identifier of the loan application", example = "a12b-34c5")
-    private String applicationId = null;*/
-    @Schema(description = "Initial status of the application", example = "Pending Review")
-    private String status = null;
+    private String applicationId;*/
+    @Schema(description = "Status of the loan application", example = "1")
+    private String status;
+    @Schema(description = "Description of the status of the loan application", example = "Pending approval")
+    private String message;
 }

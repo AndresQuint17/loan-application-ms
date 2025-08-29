@@ -15,6 +15,6 @@ public record LoanApplicationRequest(
         @Schema(description = "Loan term in months", example = "24")
         Integer term,
         @Schema(description = "Type of loan requested", example = "personal")
-        Long loanTypeId
+        String loanType
 ) {
 }

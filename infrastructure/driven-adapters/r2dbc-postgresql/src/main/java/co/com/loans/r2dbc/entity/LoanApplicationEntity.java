@@ -5,7 +5,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
-@Table("loan_applications")
+@Table("applications")
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -23,6 +23,6 @@ public class LoanApplicationEntity {
     private String email;
     @Column("status_id")
     private Long statusId;
-    @Column("status_id")
+    @Column("loan_type_id")
     private Long loanTypeId;
 }

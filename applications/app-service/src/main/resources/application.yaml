@@ -58,3 +58,6 @@ resilience4j:
         slidingWindowSize: 10
         minimumNumberOfCalls: 10
         waitDurationInOpenState: "10s"
+logging:
+  level:
+    org.springdoc: DEBUG

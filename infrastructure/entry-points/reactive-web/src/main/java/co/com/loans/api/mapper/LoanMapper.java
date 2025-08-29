@@ -10,11 +10,12 @@ import org.mapstruct.Mapping;
 public interface LoanMapper {
     @Mapping(source = "amount", target = "amount")
     @Mapping(source = "term", target = "term")
-    @Mapping(source = "loanTypeId", target = "loanTypeId")
+    @Mapping(target = "loanTypeId", ignore = true) // Ignorar mapeo de loanTypeId
     @Mapping(target = "statusId", ignore = true) // Ignorar statusId
     @Mapping(target = "email", ignore = true) // Ignorar email
     LoanApplication toDomain(LoanApplicationRequest loanApplicationRequest);
 
     @Mapping(source = "statusId", target = "status")
+    @Mapping(target = "message", ignore = true)
     LoanApplicationResponse toLoanApplicationResponse(LoanApplication model);
 }

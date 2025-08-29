@@ -9,13 +9,13 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
 @Repository
-public class MyReactiveRepositoryAdapter extends ReactiveAdapterOperations<
+public class LoanApplicationRepositoryAdapter extends ReactiveAdapterOperations<
         LoanApplication/* change for domain model */,
         LoanApplicationEntity/* change for adapter model */,
         Long,
-        MyReactiveRepository
+        LoanApplicationReactiveRepository
         > implements LoanApplicationRepository {
-    public MyReactiveRepositoryAdapter(MyReactiveRepository repository, ObjectMapper mapper) {
+    public LoanApplicationRepositoryAdapter(LoanApplicationReactiveRepository repository, ObjectMapper mapper) {
         /**
          *  Could be use mapper.mapBuilder if your domain model implement builder pattern
          *  super(repository, mapper, d -> mapper.mapBuilder(d,ObjectModel.ObjectModelBuilder.class).build());
@@ -26,6 +26,6 @@ public class MyReactiveRepositoryAdapter extends ReactiveAdapterOperations<
 
     @Override
     public Mono<LoanApplication> registerLoanApplication(LoanApplication loanApplication) {
-        return Mono.just(new LoanApplication(150000.0, 36, "test@mail.com", 1L, 1L));
+        return super.save(loanApplication);
     }
 }

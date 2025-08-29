@@ -1,4 +1,4 @@
-package co.com.loans.usecase.exceptions;
+package co.com.loans.model.exceptions;
 
 import lombok.Getter;
 
