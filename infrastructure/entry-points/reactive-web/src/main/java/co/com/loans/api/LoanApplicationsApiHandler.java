@@ -1,5 +1,6 @@
 package co.com.loans.api;
 
+import co.com.loans.api.jwt.provider.JwtTokenProvider;
 import co.com.loans.api.mapper.LoanMapper;
 import co.com.loans.api.model.LoanApplicationRequest;
 import co.com.loans.model.loanapplication.LoanApplication;
@@ -11,6 +12,7 @@ import co.com.loans.model.user.validation.UserValidations;
 import co.com.loans.usecase.registerLoanApplication.RegisterLoanApplicationUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -24,7 +26,9 @@ import java.util.Locale;
 public class LoanApplicationsApiHandler {
     private final RegisterLoanApplicationUseCase registerLoanApplicationUseCase;
     private final LoanMapper loanMapper;
+    private final JwtTokenProvider tokenProvider;
 
+    @PreAuthorize("hasRole('CLIENTE')")
     public Mono<ServerResponse> submitLoanApplication(ServerRequest serverRequest) {
         log.info("Received a loan application submission request.");
 
@@ -33,13 +37,23 @@ public class LoanApplicationsApiHandler {
                 .flatMap(requestDto -> {
                     String userIdCard = validateIdCard(requestDto.idCard());
                     String loanTypeName = validateLoanTypeName(requestDto.loanType());
+
+                    String token = extractAuthorizationToken(serverRequest);
+
                     return Mono.just(requestDto)
                             .flatMap(dto -> {
                                 LoanApplication loanApplication = loanMapper.toDomain(dto);
                                 log.debug("Mapped LoanApplicationRequest to domain model: {}", loanApplication);
                                 LoanApplicationValidations.validate(loanApplication);
                                 log.info("Loan application passed domain validations.");
-                                return registerLoanApplicationUseCase.registerLoanApplication(userIdCard, loanTypeName, loanApplication)
+                                return registerLoanApplicationUseCase
+                                        .registerLoanApplication(
+                                                userIdCard,
+                                                loanTypeName,
+                                                loanApplication,
+                                                token,
+                                                tokenProvider.getSubject(token)
+                                        )
                                         .map(loanMapper::toLoanApplicationResponse);
                             });
                 })
@@ -65,5 +79,12 @@ public class LoanApplicationsApiHandler {
         loanType.setName(name);
         LoanTypeValidations.validate(loanType);
         return name.trim().toUpperCase(Locale.ROOT);
+    }
+
+    private String extractAuthorizationToken(ServerRequest serverRequest) {
+        return serverRequest.headers().header("Authorization").stream()
+                .filter(authHeader -> authHeader.startsWith("Bearer "))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Authorization token missing or malformed"));
     }
 }

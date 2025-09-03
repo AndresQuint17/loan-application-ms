@@ -37,6 +37,9 @@ adapter:
   restconsumer:
     timeout: 5000
     url: "http://localhost:8080"
+jwt:
+  json-exp-roles: "/roles"
+  secret: MySecretK3y_MySecretK3y_MySecretK3y_MySecretK3y_
 resilience4j:
   circuitbreaker:
     instances:

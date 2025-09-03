@@ -5,5 +5,5 @@ import co.com.loans.model.user.User;
 import reactor.core.publisher.Mono;
 
 public interface UserRestConsumerGateway {
-    Mono<User> getUserByIdCard(String idCard);
+    Mono<User> getUserByIdCard(String idCard, String bearerToken);
 }

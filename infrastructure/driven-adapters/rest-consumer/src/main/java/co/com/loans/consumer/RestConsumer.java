@@ -28,10 +28,11 @@ public class RestConsumer /* implements Gateway from domain */ implements UserRe
 
     @Override
     @CircuitBreaker(name = "getUserByIdCard")
-    public Mono<User> getUserByIdCard(String idCard) {
+    public Mono<User> getUserByIdCard(String idCard, String bearerToken) {
         return client
                 .get()
                 .uri("/api/v1/usuarios/{idCard}", idCard)
+                .header("Authorization", "Bearer " + bearerToken)
                 .retrieve()
                 .bodyToMono(ResponseUserByIdCardDto.class)
                 .map(userMapper::toDomain)

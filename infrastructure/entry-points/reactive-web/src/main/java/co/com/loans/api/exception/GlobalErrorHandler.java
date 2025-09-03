@@ -1,9 +1,12 @@
 package co.com.loans.api.exception;
 
 import co.com.loans.model.exceptions.*;
+import co.com.loans.usecase.registerLoanApplication.exceptions.UserDoesNotMatchError;
+import io.jsonwebtoken.MalformedJwtException;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
@@ -19,6 +22,24 @@ public class GlobalErrorHandler {
         final String SERVER_ERROR = "Internal server error";
         final String EXTERNAL_SYSTEM_ERROR = "External system error";
 
+        // Authorization denied access
+        if(throwable instanceof AuthorizationDeniedException) {
+            return ServerResponse.status(HttpStatus.FORBIDDEN)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(Map.of(
+                            "error", BUSINESS_VALIDATION_ERROR,
+                            "message", "You do not have authorization to use this resource"
+                    ));
+        }
+        // Bad token error
+        if (throwable instanceof BadTokenError) {
+            return ServerResponse.status(HttpStatus.UNAUTHORIZED)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(Map.of(
+                            "error", BUSINESS_VALIDATION_ERROR,
+                            "message", throwable.getMessage()
+                    ));
+        }
         // Data field error
         if (throwable instanceof DataFieldException) {
             return ServerResponse.status(HttpStatus.BAD_REQUEST)
@@ -36,6 +57,15 @@ public class GlobalErrorHandler {
                     .bodyValue(Map.of(
                             "error", BUSINESS_VALIDATION_ERROR,
                             "status", ((UserDoesNotExistException) throwable).getStatus(),
+                            "message", throwable.getMessage()
+                    ));
+        }
+        // User does not match error
+        if (throwable instanceof UserDoesNotMatchError) {
+            return ServerResponse.status(HttpStatus.UNAUTHORIZED)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(Map.of(
+                            "error", BUSINESS_VALIDATION_ERROR,
                             "message", throwable.getMessage()
                     ));
         }
@@ -76,6 +106,15 @@ public class GlobalErrorHandler {
                     .bodyValue(Map.of(
                             "error", BUSINESS_VALIDATION_ERROR,
                             "status", ((LoanTypeDoesNotExistException) throwable).getStatus(),
+                            "message", throwable.getMessage()
+                    ));
+        }
+        // Malformed JWT
+        if (throwable instanceof MalformedJwtException) {
+            return ServerResponse.status(HttpStatus.BAD_REQUEST)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(Map.of(
+                            "error",BUSINESS_VALIDATION_ERROR,
                             "message", throwable.getMessage()
                     ));
         }

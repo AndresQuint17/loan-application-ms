@@ -6,6 +6,7 @@ import co.com.loans.model.loanapplication.LoanApplication;
 import co.com.loans.model.loanapplication.gateways.LoanApplicationRepository;
 import co.com.loans.model.loanapplication.gateways.UserRestConsumerGateway;
 import co.com.loans.model.loantype.gateways.LoanTypeRepository;
+import co.com.loans.usecase.registerLoanApplication.exceptions.UserDoesNotMatchError;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
@@ -15,8 +16,18 @@ public class RegisterLoanApplicationUseCase {
     private final LoanTypeRepository loanTypeRepository;
     private final UserRestConsumerGateway restConsumer;
 
-    public Mono<LoanApplication> registerLoanApplication(String idCard, String loanTypeName, LoanApplication loanApplication) {
-        return restConsumer.getUserByIdCard(idCard)
+    public Mono<LoanApplication> registerLoanApplication(
+            String idCard,
+            String loanTypeName,
+            LoanApplication loanApplication,
+            String bearerToken,
+            String subject) {
+
+        if (!idCard.equals(subject)) {
+            return Mono.error(new UserDoesNotMatchError("You can only register loan applications for yourself."));
+        }
+
+        return restConsumer.getUserByIdCard(idCard, bearerToken)
                 .flatMap(userResponse ->
                         loanTypeRepository.getLoanTypeByName(loanTypeName)
                                 .switchIfEmpty(Mono.error(new LoanTypeDoesNotExistException(
