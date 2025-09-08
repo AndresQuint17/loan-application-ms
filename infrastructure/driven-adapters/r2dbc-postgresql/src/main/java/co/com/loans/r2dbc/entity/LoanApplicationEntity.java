@@ -5,6 +5,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
+import java.math.BigDecimal;
+
 @Table("applications")
 @AllArgsConstructor
 @NoArgsConstructor
@@ -25,4 +27,8 @@ public class LoanApplicationEntity {
     private Long statusId;
     @Column("loan_type_id")
     private Long loanTypeId;
+    @Column("full_name")
+    private String fullName;
+    @Column("base_salary")
+    private BigDecimal baseSalary;
 }

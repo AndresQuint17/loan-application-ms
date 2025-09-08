@@ -3,8 +3,10 @@ package co.com.loans.api;
 import co.com.loans.api.exception.GlobalErrorHandler;
 import co.com.loans.api.model.LoanApplicationRequest;
 import co.com.loans.api.model.LoanApplicationResponse;
+import co.com.loans.api.model.PendingReviewLoanApplicationsResponse;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -21,6 +23,7 @@ import org.springframework.http.MediaType;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
 import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
@@ -76,10 +79,37 @@ public class LoanApplicationsApiRouter {
                                     )
                             }
                     )
+            ),
+            @RouterOperation(
+                    path = "/api/v1/solicitud",
+                    produces = {MediaType.APPLICATION_JSON_VALUE},
+                    method = RequestMethod.GET,
+                    beanClass = LoanApplicationsApiHandler.class,
+                    beanMethod = "listLoanApplications",
+                    operation = @Operation(
+                            operationId = "listLoanApplications",
+                            summary = "List pending loan applications",
+                            tags = {"Loan Applications"},
+                            parameters = {
+                                    @Parameter(name = "page", description = "Page number for pagination", required = true, schema = @Schema(type = "integer", defaultValue = "0")),
+                                    @Parameter(name = "size", description = "Number of items per page", required = true, schema = @Schema(type = "integer", defaultValue = "20"))
+                            },
+                            responses = {
+                                    @ApiResponse(
+                                            responseCode = "200",
+                                            description = "List of pending applications retrieved successfully",
+                                            content = @Content(
+                                                    schema = @Schema(implementation = PendingReviewLoanApplicationsResponse.class)
+                                            )
+                                    ),
+                                    @ApiResponse(responseCode = "404", description = "No loan applications found")
+                            }
+                    )
             )
     })
     public RouterFunction<ServerResponse> routerFunctionLoanApplicationsApi(LoanApplicationsApiHandler handler, GlobalErrorHandler globalErrorHandler) {
         return route(POST("/api/v1/solicitud"), handler::submitLoanApplication)
+                .andRoute(GET("/api/v1/solicitud"), handler::listLoanApplications)
                 .filter((request, next) ->
                         next.handle(request)
                                 .onErrorResume(error -> {

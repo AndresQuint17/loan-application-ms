@@ -5,10 +5,7 @@ import co.com.loans.api.mapper.LoanMapper;
 import co.com.loans.api.model.LoanApplicationRequest;
 import co.com.loans.model.loanapplication.LoanApplication;
 import co.com.loans.model.loanapplication.validation.LoanApplicationValidations;
-import co.com.loans.model.loantype.LoanType;
-import co.com.loans.model.loantype.validation.LoanTypeValidations;
-import co.com.loans.model.user.User;
-import co.com.loans.model.user.validation.UserValidations;
+import co.com.loans.usecase.listLoanApplications.ListLoanApplicationsUseCase;
 import co.com.loans.usecase.registerLoanApplication.RegisterLoanApplicationUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,13 +15,12 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
-import java.util.Locale;
-
 @Slf4j
 @RequiredArgsConstructor
 @Component
 public class LoanApplicationsApiHandler {
     private final RegisterLoanApplicationUseCase registerLoanApplicationUseCase;
+    private final ListLoanApplicationsUseCase listLoanApplicationsUseCase;
     private final LoanMapper loanMapper;
     private final JwtTokenProvider tokenProvider;
 
@@ -35,8 +31,6 @@ public class LoanApplicationsApiHandler {
         return serverRequest.bodyToMono(LoanApplicationRequest.class)
                 .doOnNext(request -> log.debug("Parsed request body: {}", request))
                 .flatMap(requestDto -> {
-                    String userIdCard = validateIdCard(requestDto.idCard());
-                    String loanTypeName = validateLoanTypeName(requestDto.loanType());
 
                     String token = extractAuthorizationToken(serverRequest);
 
@@ -48,8 +42,8 @@ public class LoanApplicationsApiHandler {
                                 log.info("Loan application passed domain validations.");
                                 return registerLoanApplicationUseCase
                                         .registerLoanApplication(
-                                                userIdCard,
-                                                loanTypeName,
+                                                requestDto.idCard(),
+                                                requestDto.loanType(),
                                                 loanApplication,
                                                 token,
                                                 tokenProvider.getSubject(token)
@@ -67,18 +61,28 @@ public class LoanApplicationsApiHandler {
                 .doFinally(signalType -> log.info("Loan application processing execution finished. Signal: {}", signalType));
     }
 
-    private String validateIdCard(String idCard) {
-        User user = new User();
-        user.setIdCard(idCard);
-        UserValidations.validate(user);
-        return idCard;
-    }
+    @PreAuthorize("hasRole('ASESOR')")
+    public Mono<ServerResponse> listLoanApplications(ServerRequest request) {
+        log.info("Received a request to list loan applications.");
 
-    private String validateLoanTypeName(String name) {
-        LoanType loanType = new LoanType();
-        loanType.setName(name);
-        LoanTypeValidations.validate(loanType);
-        return name.trim().toUpperCase(Locale.ROOT);
+        Integer page = request.queryParam("page")
+                .map(Integer::parseInt)
+                .orElse(0);
+
+        Integer size = request.queryParam("size")
+                .map(Integer::parseInt)
+                .orElse(20);
+
+        log.debug("Listing applications with page: {} and size: {}", page, size);
+
+        // 2. Usar un caso de uso para obtener las solicitudes de forma paginada.
+        return listLoanApplicationsUseCase.listPendingReviewLoanApplications(page, size)
+                .flatMap(loanApplicationsList -> {
+                    // 3. Crear y devolver una respuesta exitosa con la lista de solicitudes.
+                    return ServerResponse.ok().bodyValue(loanApplicationsList);
+                })
+                .doOnError(throwable -> log.error("Error listing loan applications", throwable))
+                .doFinally(signalType -> log.info("Listing loan applications execution finished. Signal: {}", signalType));
     }
 
     private String extractAuthorizationToken(ServerRequest serverRequest) {

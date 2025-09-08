@@ -6,7 +6,7 @@ import co.com.loans.model.loantype.LoanType;
 public class LoanTypeValidations {
     public static void validate(LoanType loanType) {
         if (loanType.getName() == null || loanType.getName().isBlank()) {
-            throw new DataFieldException(400, "Loan type name is required.");
+            throw new DataFieldException("Loan type name is required.");
         }
     }
 }

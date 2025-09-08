@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -16,4 +18,6 @@ public class LoanApplication {
     private String email;
     private Long statusId;
     private Long loanTypeId;
+    private BigDecimal baseSalary;
+    private String fullName;
 }

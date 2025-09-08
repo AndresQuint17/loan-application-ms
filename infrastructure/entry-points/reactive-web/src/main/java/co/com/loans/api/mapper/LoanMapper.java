@@ -13,6 +13,8 @@ public interface LoanMapper {
     @Mapping(target = "loanTypeId", ignore = true) // Ignorar mapeo de loanTypeId
     @Mapping(target = "statusId", ignore = true) // Ignorar statusId
     @Mapping(target = "email", ignore = true) // Ignorar email
+    @Mapping(target = "fullName", ignore = true) // Ignorar full name
+    @Mapping(target = "baseSalary", ignore = true) // Ignorar base salary
     LoanApplication toDomain(LoanApplicationRequest loanApplicationRequest);
 
     @Mapping(source = "statusId", target = "status")

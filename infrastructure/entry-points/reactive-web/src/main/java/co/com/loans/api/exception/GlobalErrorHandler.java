@@ -46,7 +46,6 @@ public class GlobalErrorHandler {
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(Map.of(
                             "error", BUSINESS_VALIDATION_ERROR,
-                            "status", ((DataFieldException) throwable).getStatus(),
                             "message", throwable.getMessage()
                     ));
         }

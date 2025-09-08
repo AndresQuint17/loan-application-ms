@@ -22,8 +22,8 @@ public class JwtFilter implements WebFilter {
         ServerHttpRequest request = exchange.getRequest();
         String path = request.getPath().value();
 
-        // Permitir el acceso a la ruta de login sin token
-        if (path.contains("login")) {
+        // Permitir el acceso a las rutas de documentacion
+        if (path.contains("swagger-ui") || path.contains("v3/api-docs")) {
             return chain.filter(exchange);
         }
 
