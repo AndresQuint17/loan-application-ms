@@ -11,6 +11,8 @@ services:
       - DATABASE_HOST=postgresql
     volumes:
       - crediya-loan-applications-data:/var/lib/postgresql/data/
+    networks:
+      - loan-application-net
 
   pgadmin:
     image: dpage/pgadmin4
@@ -23,6 +25,12 @@ services:
       - pgadmin-data:/var/lib/pgadmin
     depends_on:
       - postgresql
+    networks:
+      - loan-application-net
+
+networks:
+  loan-application-net:
+    external: true
 
 volumes:
   crediya-loan-applications-data:
