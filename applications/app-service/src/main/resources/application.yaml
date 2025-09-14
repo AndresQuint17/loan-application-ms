@@ -13,11 +13,12 @@ spring:
     include: null
 adapters:
   r2dbc:
-    host: "localhost"
-    port: 3306
-    database: "loans"
-    username: "root"
-    password: "passwordSQL"
+    host: "${ADAPTERS_R2DBC_HOST:localhost}"
+    port: "${ADAPTERS_R2DBC_PORT:5433}"
+    database: "${ADAPTERS_R2DBC_DATABASE:crediya-loan-applications}"
+    schema: "${ADAPTERS_R2DBC_SCHEMA:public}"
+    username: "${ADAPTERS_R2DBC_USERNAME:admin}"
+    password: "${ADAPTERS_R2DBC_PASSWORD:passwordSQL}"
 management:
   endpoints:
     web:
@@ -27,5 +28,43 @@ management:
     health:
       probes:
         enabled: true
+  health:
+    circuitbreakers:
+      enabled: true
 cors:
-  allowed-origins: "http://localhost:4200,http://localhost:8080"
+  allowed-origins: "http://localhost:4200,http://localhost:8080,http://localhost:8082"
+adapter:
+  restconsumer:
+    timeout: 5000
+    url: "http://localhost:8080"
+  sqs:
+    region: "us-east-2"
+    queueUrl: "https://sqs.us-east-2.amazonaws.com/812612912253/cola-notificaciones-solicitudes"
+   # endpoint: "http://localhost:4566 # For localstack only"
+jwt:
+  json-exp-roles: "/roles"
+  secret: "MySecretK3y_MySecretK3y_MySecretK3y_MySecretK3y_"
+resilience4j:
+  circuitbreaker:
+    instances:
+      testGet:
+        registerHealthIndicator: true
+        failureRateThreshold: 50
+        slowCallRateThreshold: 50
+        slowCallDurationThreshold: "2s"
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 10
+        waitDurationInOpenState: "10s"
+      testPost:
+        registerHealthIndicator: true
+        failureRateThreshold: 50
+        slowCallRateThreshold: 50
+        slowCallDurationThreshold: "2s"
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 10
+        waitDurationInOpenState: "10s"
+logging:
+  level:
+    org.springdoc: "DEBUG"

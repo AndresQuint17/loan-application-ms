@@ -1,34 +1,109 @@
 package co.com.loans.api;
 
+import co.com.loans.api.jwt.provider.JwtTokenProvider;
+import co.com.loans.api.mapper.LoanMapper;
 import co.com.loans.api.model.LoanApplicationRequest;
-import co.com.loans.api.model.LoanApplicationResponse;
-import lombok.extern.log4j.Log4j2;
-import lombok.AllArgsConstructor;
+import co.com.loans.api.model.ChangeLoanApplicationStatusRequest;
+import co.com.loans.model.loanapplication.LoanApplication;
+import co.com.loans.model.loanapplication.validation.LoanApplicationValidations;
+import co.com.loans.usecase.listLoanApplications.ListLoanApplicationsUseCase;
+import co.com.loans.usecase.changeLoanApplicationStatus.ChangeLoanApplicationStatusUseCase;
+import co.com.loans.usecase.registerLoanApplication.RegisterLoanApplicationUseCase;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
-@Log4j2
-@AllArgsConstructor
+@Slf4j
+@RequiredArgsConstructor
 @Component
 public class LoanApplicationsApiHandler {
-//    private final UseCase someUseCase;
+    private final RegisterLoanApplicationUseCase registerLoanApplicationUseCase;
+    private final ListLoanApplicationsUseCase listLoanApplicationsUseCase;
+    private final ChangeLoanApplicationStatusUseCase changeLoanApplicationStatusUseCase;
+    private final LoanMapper loanMapper;
+    private final JwtTokenProvider tokenProvider;
 
+    @PreAuthorize("hasRole('CLIENTE')")
     public Mono<ServerResponse> submitLoanApplication(ServerRequest serverRequest) {
+        log.info("Received a loan application submission request.");
+
         return serverRequest.bodyToMono(LoanApplicationRequest.class)
-                .flatMap(body -> submitLoanApplicationMock()) // TODO: Call real use case here -> someUseCase.some()
-                .flatMap(response -> ServerResponse.ok().bodyValue(response)); // TODO: Customize response here
+                .doOnNext(request -> log.debug("Parsed request body: {}", request))
+                .flatMap(requestDto -> {
+
+                    String token = extractAuthorizationToken(serverRequest);
+
+                    return Mono.just(requestDto)
+                            .flatMap(dto -> {
+                                LoanApplication loanApplication = loanMapper.toDomain(dto);
+                                log.debug("Mapped LoanApplicationRequest to domain model: {}", loanApplication);
+                                LoanApplicationValidations.validate(loanApplication);
+                                log.info("Loan application passed domain validations.");
+                                return registerLoanApplicationUseCase
+                                        .registerLoanApplication(
+                                                requestDto.idCard(),
+                                                requestDto.loanType(),
+                                                loanApplication,
+                                                token,
+                                                tokenProvider.getSubject(token)
+                                        )
+                                        .map(loanMapper::toLoanApplicationResponse);
+                            });
+                })
+                .flatMap(response -> {
+                    if (response.getStatus().equals("1")) {
+                        response.setMessage("Pending approval");
+                    }
+                    log.info("Loan application completed with status: {}", response.getStatus());
+                    return ServerResponse.ok().bodyValue(response);
+                })
+                .doFinally(signalType -> log.info("Loan application processing execution finished. Signal: {}", signalType));
     }
 
-    private Mono<LoanApplicationResponse> submitLoanApplicationMock() { // TODO: Remove this mock method
-        return Mono.fromSupplier(() -> {
-            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-            try {
-                return mapper.readValue("{\n  \"applicationId\" : \"applicationId\",\n  \"status\" : \"Pending Review\"\n}", LoanApplicationResponse.class);
-            } catch (Exception e) {
-                throw new RuntimeException("Cannot parse example to LoanApplicationResponse");
-            }
-        });
+    @PreAuthorize("hasRole('ASESOR')")
+    public Mono<ServerResponse> listLoanApplications(ServerRequest request) {
+        log.info("Received a request to list loan applications.");
+
+        Integer page = request.queryParam("page")
+                .map(Integer::parseInt)
+                .orElse(0);
+
+        Integer size = request.queryParam("size")
+                .map(Integer::parseInt)
+                .orElse(20);
+
+        log.debug("Listing applications with page: {} and size: {}", page, size);
+
+        return listLoanApplicationsUseCase.listPendingReviewLoanApplications(page, size)
+                .flatMap(loanApplicationsList -> {
+                    return ServerResponse.ok().bodyValue(loanApplicationsList);
+                })
+                .doOnError(throwable -> log.error("Error listing loan applications", throwable))
+                .doFinally(signalType -> log.info("Listing loan applications execution finished. Signal: {}", signalType));
+    }
+
+    @PreAuthorize("hasRole('ASESOR')")
+    public Mono<ServerResponse> updateLoanApplicationStatus(ServerRequest request) {
+        log.info("Received a request to manage a loan application decision.");
+
+        return request.bodyToMono(ChangeLoanApplicationStatusRequest.class)
+                .doOnNext(req -> log.debug("Parsed request body: {}", req))
+                .flatMap(requestDto -> (changeLoanApplicationStatusUseCase.updateStatus(
+                        requestDto.loanApplicationId(), requestDto.newStatus())
+                        .flatMap(res -> ServerResponse.ok().bodyValue(res))
+                ))
+                .doOnError(error -> log.error("An error occurred while updating the status: " + error.getMessage()))
+                .doFinally(signalType -> log.info("Update finished"));
+    }
+
+    private String extractAuthorizationToken(ServerRequest serverRequest) {
+        return serverRequest.headers().header("Authorization").stream()
+                .filter(authHeader -> authHeader.startsWith("Bearer "))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Authorization token missing or malformed"));
     }
 }
