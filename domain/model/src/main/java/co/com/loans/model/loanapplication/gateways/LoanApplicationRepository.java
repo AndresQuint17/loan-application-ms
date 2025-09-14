@@ -7,4 +7,5 @@ import reactor.core.publisher.Mono;
 public interface LoanApplicationRepository {
     Mono<LoanApplication> registerLoanApplication(LoanApplication loanApplication);
     Mono<LoanApplicationsResponseDto> findPaginated(int page, int size);
+    Mono<String> updateLoanApplicationStatus(Long loanApplicationId, String newStatusId);
 }

@@ -28,4 +28,7 @@ public interface LoanApplicationReactiveRepository extends ReactiveCrudRepositor
 
     @Query("SELECT SUM(a.amount) FROM applications a WHERE a.status_id = 2")
     Mono<BigDecimal> calculateTotalMonthlyApprovedDebt();
+
+    @Query("SELECT status_id FROM statuses WHERE name = :statusName")
+    Mono<Long> findStatusIdByName(@Param("statusName") String statusName);
 }

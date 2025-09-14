@@ -1,6 +1,10 @@
 package co.com.loans.api.exception;
 
 import co.com.loans.model.exceptions.*;
+import co.com.loans.r2dbc.exceptions.LoanApplicationNotFoundError;
+import co.com.loans.r2dbc.exceptions.StatusNameDoesNotExistError;
+import co.com.loans.usecase.changeLoanApplicationStatus.exceptions.LoanApplicationIdError;
+import co.com.loans.usecase.changeLoanApplicationStatus.exceptions.LoanApplicationStatusNameError;
 import co.com.loans.usecase.registerLoanApplication.exceptions.UserDoesNotMatchError;
 import io.jsonwebtoken.MalformedJwtException;
 import org.springframework.dao.DataAccessResourceFailureException;
@@ -114,6 +118,38 @@ public class GlobalErrorHandler {
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(Map.of(
                             "error",BUSINESS_VALIDATION_ERROR,
+                            "message", throwable.getMessage()
+                    ));
+        }
+        if (throwable instanceof LoanApplicationIdError) {
+            return ServerResponse.status(HttpStatus.BAD_REQUEST)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(Map.of(
+                            "error",BUSINESS_VALIDATION_ERROR,
+                            "message", throwable.getMessage()
+                    ));
+        }
+        if (throwable instanceof LoanApplicationStatusNameError) {
+            return ServerResponse.status(HttpStatus.BAD_REQUEST)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(Map.of(
+                            "error",BUSINESS_VALIDATION_ERROR,
+                            "message", throwable.getMessage()
+                    ));
+        }
+        if (throwable instanceof LoanApplicationNotFoundError) {
+            return ServerResponse.status(HttpStatus.NOT_FOUND)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(Map.of(
+                            "error", BUSINESS_VALIDATION_ERROR,
+                            "message", throwable.getMessage()
+                    ));
+        }
+        if (throwable instanceof StatusNameDoesNotExistError) {
+            return ServerResponse.status(HttpStatus.NOT_FOUND)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(Map.of(
+                            "error", BUSINESS_VALIDATION_ERROR,
                             "message", throwable.getMessage()
                     ));
         }

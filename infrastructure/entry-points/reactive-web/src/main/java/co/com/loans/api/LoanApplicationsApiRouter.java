@@ -23,8 +23,7 @@ import org.springframework.http.MediaType;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
-import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
+import static org.springframework.web.reactive.function.server.RequestPredicates.*;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -110,6 +109,7 @@ public class LoanApplicationsApiRouter {
     public RouterFunction<ServerResponse> routerFunctionLoanApplicationsApi(LoanApplicationsApiHandler handler, GlobalErrorHandler globalErrorHandler) {
         return route(POST("/api/v1/solicitud"), handler::submitLoanApplication)
                 .andRoute(GET("/api/v1/solicitud"), handler::listLoanApplications)
+                .andRoute(PUT("/api/v1/solicitud"), handler::updateLoanApplicationStatus)
                 .filter((request, next) ->
                         next.handle(request)
                                 .onErrorResume(error -> {

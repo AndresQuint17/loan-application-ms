@@ -5,6 +5,8 @@ import co.com.loans.model.loanapplication.dto.LoanApplicationDto;
 import co.com.loans.model.loanapplication.dto.LoanApplicationsResponseDto;
 import co.com.loans.model.loanapplication.gateways.LoanApplicationRepository;
 import co.com.loans.r2dbc.entity.LoanApplicationEntity;
+import co.com.loans.r2dbc.exceptions.LoanApplicationNotFoundError;
+import co.com.loans.r2dbc.exceptions.StatusNameDoesNotExistError;
 import co.com.loans.r2dbc.helper.ReactiveAdapterOperations;
 import lombok.extern.slf4j.Slf4j;
 import org.reactivecommons.utils.ObjectMapper;
@@ -16,6 +18,7 @@ import reactor.core.publisher.Mono;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 @Slf4j
 @Repository
@@ -64,5 +67,21 @@ public class LoanApplicationRepositoryAdapter extends ReactiveAdapterOperations<
                 .zipWith(totalMonthlyDebtMono, (applicationsList, totalDebt) ->
                         new LoanApplicationsResponseDto(applicationsList, totalDebt)
                 );
+    }
+
+    @Override
+    public Mono<String> updateLoanApplicationStatus(Long loanApplicationId, String newStatusName) {
+        return repository.findStatusIdByName(newStatusName.trim().toUpperCase(Locale.ROOT))
+                .switchIfEmpty(Mono.error(new StatusNameDoesNotExistError("Status not found: " + newStatusName)))
+                .flatMap(statusId ->
+                        repository.findById(loanApplicationId)
+                                .switchIfEmpty(Mono.error(new LoanApplicationNotFoundError("Loan application not found: " + loanApplicationId)))
+                                .flatMap(existingEntity -> {
+                                    existingEntity.setStatusId(statusId);
+                                    return repository.save(existingEntity);
+                                })
+                )
+                .map(LoanApplicationEntity::getEmail)
+                .doOnError(error -> log.error("Error updating loan application status: {}", error.getMessage()));
     }
 }

@@ -3,9 +3,11 @@ package co.com.loans.api;
 import co.com.loans.api.jwt.provider.JwtTokenProvider;
 import co.com.loans.api.mapper.LoanMapper;
 import co.com.loans.api.model.LoanApplicationRequest;
+import co.com.loans.api.model.ChangeLoanApplicationStatusRequest;
 import co.com.loans.model.loanapplication.LoanApplication;
 import co.com.loans.model.loanapplication.validation.LoanApplicationValidations;
 import co.com.loans.usecase.listLoanApplications.ListLoanApplicationsUseCase;
+import co.com.loans.usecase.changeLoanApplicationStatus.ChangeLoanApplicationStatusUseCase;
 import co.com.loans.usecase.registerLoanApplication.RegisterLoanApplicationUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +23,7 @@ import reactor.core.publisher.Mono;
 public class LoanApplicationsApiHandler {
     private final RegisterLoanApplicationUseCase registerLoanApplicationUseCase;
     private final ListLoanApplicationsUseCase listLoanApplicationsUseCase;
+    private final ChangeLoanApplicationStatusUseCase changeLoanApplicationStatusUseCase;
     private final LoanMapper loanMapper;
     private final JwtTokenProvider tokenProvider;
 
@@ -75,14 +78,26 @@ public class LoanApplicationsApiHandler {
 
         log.debug("Listing applications with page: {} and size: {}", page, size);
 
-        // 2. Usar un caso de uso para obtener las solicitudes de forma paginada.
         return listLoanApplicationsUseCase.listPendingReviewLoanApplications(page, size)
                 .flatMap(loanApplicationsList -> {
-                    // 3. Crear y devolver una respuesta exitosa con la lista de solicitudes.
                     return ServerResponse.ok().bodyValue(loanApplicationsList);
                 })
                 .doOnError(throwable -> log.error("Error listing loan applications", throwable))
                 .doFinally(signalType -> log.info("Listing loan applications execution finished. Signal: {}", signalType));
+    }
+
+    @PreAuthorize("hasRole('ASESOR')")
+    public Mono<ServerResponse> updateLoanApplicationStatus(ServerRequest request) {
+        log.info("Received a request to manage a loan application decision.");
+
+        return request.bodyToMono(ChangeLoanApplicationStatusRequest.class)
+                .doOnNext(req -> log.debug("Parsed request body: {}", req))
+                .flatMap(requestDto -> (changeLoanApplicationStatusUseCase.updateStatus(
+                        requestDto.loanApplicationId(), requestDto.newStatus())
+                        .flatMap(res -> ServerResponse.ok().bodyValue(res))
+                ))
+                .doOnError(error -> log.error("An error occurred while updating the status: " + error.getMessage()))
+                .doFinally(signalType -> log.info("Update finished"));
     }
 
     private String extractAuthorizationToken(ServerRequest serverRequest) {

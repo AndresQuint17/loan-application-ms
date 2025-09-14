@@ -13,12 +13,12 @@ spring:
     include: null
 adapters:
   r2dbc:
-    host: ${ADAPTERS_R2DBC_HOST:localhost}
-    port: ${ADAPTERS_R2DBC_PORT:5433}
-    database: ${ADAPTERS_R2DBC_DATABASE:crediya-loan-applications}
-    schema: ${ADAPTERS_R2DBC_SCHEMA:public}
-    username: ${ADAPTERS_R2DBC_USERNAME:admin}
-    password: ${ADAPTERS_R2DBC_PASSWORD:passwordSQL}
+    host: "${ADAPTERS_R2DBC_HOST:localhost}"
+    port: "${ADAPTERS_R2DBC_PORT:5433}"
+    database: "${ADAPTERS_R2DBC_DATABASE:crediya-loan-applications}"
+    schema: "${ADAPTERS_R2DBC_SCHEMA:public}"
+    username: "${ADAPTERS_R2DBC_USERNAME:admin}"
+    password: "${ADAPTERS_R2DBC_PASSWORD:passwordSQL}"
 management:
   endpoints:
     web:
@@ -37,9 +37,13 @@ adapter:
   restconsumer:
     timeout: 5000
     url: "http://localhost:8080"
+  sqs:
+    region: "us-east-2"
+    queueUrl: "https://sqs.us-east-2.amazonaws.com/812612912253/cola-notificaciones-solicitudes"
+   # endpoint: "http://localhost:4566 # For localstack only"
 jwt:
   json-exp-roles: "/roles"
-  secret: MySecretK3y_MySecretK3y_MySecretK3y_MySecretK3y_
+  secret: "MySecretK3y_MySecretK3y_MySecretK3y_MySecretK3y_"
 resilience4j:
   circuitbreaker:
     instances:
@@ -63,4 +67,4 @@ resilience4j:
         waitDurationInOpenState: "10s"
 logging:
   level:
-    org.springdoc: DEBUG
+    org.springdoc: "DEBUG"
