@@ -1,5 +1,6 @@
 package co.com.loans.sqs.sender;
 
+import co.com.loans.model.loanapplication.dto.LoanValidationRequest;
 import co.com.loans.model.loanapplication.gateways.MessageGateway;
 import co.com.loans.sqs.sender.config.SQSSenderProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,15 +33,24 @@ public class SQSSender implements MessageGateway {
 
         String jsonMessage = objectMapper.writeValueAsString(messagePayload);
 
-        return Mono.fromCallable(() -> buildRequest(jsonMessage))
+        return Mono.fromCallable(() -> buildRequest(jsonMessage, properties.queueUrl()))
                 .flatMap(request -> Mono.fromFuture(client.sendMessage(request)))
                 .doOnNext(response -> log.debug("Message sent {}", response.messageId()))
                 .map(SendMessageResponse::messageId);
     }
 
-    private SendMessageRequest buildRequest(String message) {
+    @Override
+    public Mono<String> sendMessageToLambdaCalculateCapacity(LoanValidationRequest bodyRequest) {
+        return Mono.fromCallable(() -> objectMapper.writeValueAsString(bodyRequest)) // Serializa a JSON
+                .map(json -> buildRequest(json, properties.calculateCapacityQueueUrl())) // Construye el request SQS
+                .flatMap(request -> Mono.fromFuture(client.sendMessage(request))) // Envía el mensaje
+                .doOnNext(response -> log.debug("Message sent to calculate capacity queue. MessageId: {}", response.messageId()))
+                .map(SendMessageResponse::messageId);
+    }
+
+    private SendMessageRequest buildRequest(String message, String queueUrl) {
         return SendMessageRequest.builder()
-                .queueUrl(properties.queueUrl())
+                .queueUrl(queueUrl)
                 .messageBody(message)
                 .build();
     }

@@ -40,6 +40,7 @@ adapter:
   sqs:
     region: "us-east-2"
     queueUrl: "https://sqs.us-east-2.amazonaws.com/812612912253/cola-notificaciones-solicitudes"
+    calculateCapacityQueueUrl: "https://sqs.us-east-2.amazonaws.com/812612912253/cola-calcular-capacidad"
    # endpoint: "http://localhost:4566 # For localstack only"
 jwt:
   json-exp-roles: "/roles"
