@@ -110,7 +110,6 @@ public class LoanApplicationsApiRouter {
         return route(POST("/api/v1/solicitud"), handler::submitLoanApplication)
                 .andRoute(GET("/api/v1/solicitud"), handler::listLoanApplications)
                 .andRoute(PUT("/api/v1/solicitud"), handler::updateLoanApplicationStatus)
-                .andRoute(POST("/api/v1/calcular-capacidad"), handler::calculateDebtCapacity)
                 .filter((request, next) ->
                         next.handle(request)
                                 .onErrorResume(error -> {

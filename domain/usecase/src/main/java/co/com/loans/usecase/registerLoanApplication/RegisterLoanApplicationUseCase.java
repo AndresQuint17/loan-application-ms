@@ -15,7 +15,6 @@ import co.com.loans.model.loantype.gateways.LoanTypeRepository;
 import co.com.loans.model.loantype.validation.LoanTypeValidations;
 import co.com.loans.model.user.User;
 import co.com.loans.model.user.validation.UserValidations;
-import co.com.loans.model.loanapplication.mapper.LoanValidationMapper;
 import co.com.loans.usecase.registerLoanApplication.exceptions.UserDoesNotMatchError;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
