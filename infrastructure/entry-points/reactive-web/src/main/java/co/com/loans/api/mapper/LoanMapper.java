@@ -3,6 +3,7 @@ package co.com.loans.api.mapper;
 import co.com.loans.api.model.LoanApplicationRequest;
 import co.com.loans.api.model.LoanApplicationResponse;
 import co.com.loans.model.loanapplication.LoanApplication;
+import co.com.loans.model.loanapplication.dto.LoanApplicationDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -19,5 +20,5 @@ public interface LoanMapper {
 
     @Mapping(source = "statusId", target = "status")
     @Mapping(target = "message", ignore = true)
-    LoanApplicationResponse toLoanApplicationResponse(LoanApplication model);
+    LoanApplicationResponse toLoanApplicationResponse(LoanApplicationDto model);
 }

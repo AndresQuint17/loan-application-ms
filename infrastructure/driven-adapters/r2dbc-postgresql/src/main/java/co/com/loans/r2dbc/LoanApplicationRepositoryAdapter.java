@@ -1,6 +1,7 @@
 package co.com.loans.r2dbc;
 
 import co.com.loans.model.loanapplication.LoanApplication;
+import co.com.loans.model.loanapplication.dto.LoanApplicationCalculateCapacityDto;
 import co.com.loans.model.loanapplication.dto.LoanApplicationDto;
 import co.com.loans.model.loanapplication.dto.LoanApplicationsResponseDto;
 import co.com.loans.model.loanapplication.gateways.LoanApplicationRepository;
@@ -38,8 +39,11 @@ public class LoanApplicationRepositoryAdapter extends ReactiveAdapterOperations<
     }
 
     @Override
-    public Mono<LoanApplication> registerLoanApplication(LoanApplication loanApplication) {
-        return super.save(loanApplication);
+    public Mono<LoanApplicationDto> registerLoanApplication(LoanApplication loanApplication) {
+        LoanApplicationEntity entity = mapper.map(loanApplication, LoanApplicationEntity.class);
+
+        return repository.save(entity)
+                .map(savedEntity -> mapper.map(savedEntity, LoanApplicationDto.class));
     }
 
     @Override
@@ -83,5 +87,15 @@ public class LoanApplicationRepositoryAdapter extends ReactiveAdapterOperations<
                 )
                 .map(LoanApplicationEntity::getEmail)
                 .doOnError(error -> log.error("Error updating loan application status: {}", error.getMessage()));
+    }
+
+    @Override
+    public Flux<LoanApplicationCalculateCapacityDto> listAllApprovedApplicationsOfUser(String idCard) {
+        return repository.findApprovedApplicationsByIdCard(idCard);
+    }
+
+    @Override
+    public Mono<BigDecimal> getAmountOfApprovedLoan(Long loanId) {
+        return repository.getAmountByLoanId(loanId);
     }
 }

@@ -1,5 +1,6 @@
 package co.com.loans.r2dbc;
 
+import co.com.loans.model.loanapplication.dto.LoanApplicationCalculateCapacityDto;
 import co.com.loans.model.loanapplication.dto.LoanApplicationDto;
 import co.com.loans.r2dbc.entity.LoanApplicationEntity;
 import org.springframework.data.r2dbc.repository.Query;
@@ -31,4 +32,17 @@ public interface LoanApplicationReactiveRepository extends ReactiveCrudRepositor
 
     @Query("SELECT status_id FROM statuses WHERE name = :statusName")
     Mono<Long> findStatusIdByName(@Param("statusName") String statusName);
+
+    @Query("SELECT " +
+            "a.application_id, a.amount, a.term, " +
+            "lt.interest_rate " +
+            "FROM applications a " +
+            "JOIN loan_types lt ON a.loan_type_id = lt.loan_type_id " +
+            "JOIN statuses s ON a.status_id = s.status_id " +
+            "WHERE a.email = $1 " +
+            "AND s.name = 'APPROVED'")
+    Flux<LoanApplicationCalculateCapacityDto> findApprovedApplicationsByIdCard(String email);
+
+    @Query("SELECT amount FROM applications WHERE application_id = $1")
+    Mono<BigDecimal> getAmountByLoanId(Long loanId);
 }
