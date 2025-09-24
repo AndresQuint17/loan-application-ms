@@ -106,7 +106,7 @@ public class RegisterLoanApplicationUseCase {
                                 .newLoan(newLoan)
                                 .build();
                         // Enviamos el mensaje a la Lambda y devolvemos el préstamo registrado
-                        return messageGateway.sendMessageToLambdaCalculateCapacity(validationRequest)
+                        return messageGateway.sendMessageToCalculateCapacity(validationRequest)
                                 .thenReturn(registered);
                     });
         } else {

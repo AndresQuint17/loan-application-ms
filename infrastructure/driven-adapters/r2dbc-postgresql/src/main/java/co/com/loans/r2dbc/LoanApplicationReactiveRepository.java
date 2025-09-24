@@ -42,4 +42,7 @@ public interface LoanApplicationReactiveRepository extends ReactiveCrudRepositor
             "WHERE a.email = $1 " +
             "AND s.name = 'APPROVED'")
     Flux<LoanApplicationCalculateCapacityDto> findApprovedApplicationsByIdCard(String email);
+
+    @Query("SELECT amount FROM applications WHERE application_id = $1")
+    Mono<BigDecimal> getAmountByLoanId(Long loanId);
 }

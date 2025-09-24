@@ -7,5 +7,6 @@ public record SQSSenderProperties(
      String region,
      String queueUrl,
      String calculateCapacityQueueUrl,
+     String updateReportDynamoQueueUrl,
      String endpoint){
 }

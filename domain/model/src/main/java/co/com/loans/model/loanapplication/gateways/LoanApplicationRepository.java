@@ -7,9 +7,12 @@ import co.com.loans.model.loanapplication.dto.LoanApplicationsResponseDto;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
+
 public interface LoanApplicationRepository {
     Mono<LoanApplicationDto> registerLoanApplication(LoanApplication loanApplication);
     Mono<LoanApplicationsResponseDto> findPaginated(int page, int size);
     Mono<String> updateLoanApplicationStatus(Long loanApplicationId, String newStatusId);
     Flux<LoanApplicationCalculateCapacityDto> listAllApprovedApplicationsOfUser(String idCard);
+    Mono<BigDecimal> getAmountOfApprovedLoan(Long loanId);
 }

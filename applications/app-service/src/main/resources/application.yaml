@@ -41,6 +41,7 @@ adapter:
     region: "us-east-2"
     queueUrl: "https://sqs.us-east-2.amazonaws.com/812612912253/cola-notificaciones-solicitudes"
     calculateCapacityQueueUrl: "https://sqs.us-east-2.amazonaws.com/812612912253/cola-calcular-capacidad"
+    updateReportDynamoQueueUrl: "https://sqs.us-east-2.amazonaws.com/812612912253/cola-actualizar-reporte-dynamo"
 jwt:
   json-exp-roles: "/roles"
   secret: "MySecretK3y_MySecretK3y_MySecretK3y_MySecretK3y_"

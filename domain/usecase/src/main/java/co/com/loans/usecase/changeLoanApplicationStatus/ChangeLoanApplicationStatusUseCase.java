@@ -1,6 +1,5 @@
 package co.com.loans.usecase.changeLoanApplicationStatus;
 
-import co.com.loans.model.loanapplication.LoanApplication;
 import co.com.loans.model.loanapplication.dto.LoanValidationResponse;
 import co.com.loans.model.loanapplication.gateways.LoanApplicationRepository;
 import co.com.loans.model.loanapplication.gateways.MessageGateway;
@@ -9,6 +8,8 @@ import co.com.loans.usecase.changeLoanApplicationStatus.exceptions.LoanApplicati
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import reactor.core.publisher.Mono;
+
+import java.util.Locale;
 
 @RequiredArgsConstructor
 public class ChangeLoanApplicationStatusUseCase {
@@ -26,6 +27,7 @@ public class ChangeLoanApplicationStatusUseCase {
         }
         return loanApplicationRepository.updateLoanApplicationStatus(loanApplicationId, newStatus)
                 .flatMap(email -> messageGateway.sendNotification(email, newStatus))
+                .flatMap(messageId -> sendMessageToUpdateReportQueue(loanApplicationId, newStatus))
                 .then();
     }
 
@@ -34,6 +36,15 @@ public class ChangeLoanApplicationStatusUseCase {
 
         return loanApplicationRepository.updateLoanApplicationStatus(response.getApplicationId(), response.getDecision())
                 .flatMap(email -> messageGateway.sendNotificationWithPaymentPlan(email, response))
+                .flatMap(messageId -> sendMessageToUpdateReportQueue(response.getApplicationId(), response.getDecision()))
                 .then();
+    }
+
+    private Mono<String> sendMessageToUpdateReportQueue(Long applicationId, String status) {
+        if (status==null || status.isBlank() || !status.trim().toUpperCase(Locale.ROOT).equals("APPROVED")) {
+            return Mono.empty();
+        }
+        return loanApplicationRepository.getAmountOfApprovedLoan(applicationId)
+                .flatMap(messageGateway::updateReportApprovedApplications);
     }
 }

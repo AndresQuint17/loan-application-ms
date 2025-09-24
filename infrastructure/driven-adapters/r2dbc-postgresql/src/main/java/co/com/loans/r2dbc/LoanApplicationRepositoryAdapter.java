@@ -93,4 +93,9 @@ public class LoanApplicationRepositoryAdapter extends ReactiveAdapterOperations<
     public Flux<LoanApplicationCalculateCapacityDto> listAllApprovedApplicationsOfUser(String idCard) {
         return repository.findApprovedApplicationsByIdCard(idCard);
     }
+
+    @Override
+    public Mono<BigDecimal> getAmountOfApprovedLoan(Long loanId) {
+        return repository.getAmountByLoanId(loanId);
+    }
 }
