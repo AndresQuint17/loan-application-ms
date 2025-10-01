@@ -13,12 +13,12 @@ spring:
     include: null
 adapters:
   r2dbc:
-    host: "${ADAPTERS_R2DBC_HOST:localhost}"
-    port: "${ADAPTERS_R2DBC_PORT:5433}"
-    database: "${ADAPTERS_R2DBC_DATABASE:crediya-loan-applications}"
-    schema: "${ADAPTERS_R2DBC_SCHEMA:public}"
-    username: "${ADAPTERS_R2DBC_USERNAME:admin}"
-    password: "${ADAPTERS_R2DBC_PASSWORD:passwordSQL}"
+    host: ${ADAPTERS_R2DBC_HOST:localhost}
+    port: ${ADAPTERS_R2DBC_PORT:5433}
+    database: ${ADAPTERS_R2DBC_DATABASE:crediya-loan-applications}
+    schema: ${ADAPTERS_R2DBC_SCHEMA:public}
+    username: ${ADAPTERS_R2DBC_USERNAME:admin}
+    password: ${ADAPTERS_R2DBC_PASSWORD:passwordSQL}
 management:
   endpoints:
     web:
@@ -36,15 +36,15 @@ cors:
 adapter:
   restconsumer:
     timeout: 5000
-    url: "http://localhost:8080"
+    url: ${AUTHENTICATION_MS_URL:http://localhost:8080}
   sqs:
-    region: "us-east-2"
-    queueUrl: "https://sqs.us-east-2.amazonaws.com/812612912253/cola-notificaciones-solicitudes"
-    calculateCapacityQueueUrl: "https://sqs.us-east-2.amazonaws.com/812612912253/cola-calcular-capacidad"
-    updateReportDynamoQueueUrl: "https://sqs.us-east-2.amazonaws.com/812612912253/cola-actualizar-reporte-dynamo"
+    region: ${SQS_ADAPTER_REGION:us-east-2}
+    queueUrl: ${NOTIFICATIONS_QUEUE_URL:https://sqs.us-east-2.amazonaws.com/812612912253/cola-notificaciones-solicitudes}
+    calculateCapacityQueueUrl: ${CALCULATE_CAPACITY_QUEUE_URL:https://sqs.us-east-2.amazonaws.com/812612912253/cola-calcular-capacidad}
+    updateReportDynamoQueueUrl: ${UPDATE_REPORT_DYNAMO_QUEUE_URL:https://sqs.us-east-2.amazonaws.com/812612912253/cola-actualizar-reporte-dynamo}
 jwt:
   json-exp-roles: "/roles"
-  secret: "MySecretK3y_MySecretK3y_MySecretK3y_MySecretK3y_"
+  secret: ${AUTHENTICATION_JWT_SECRET_KEY:MySecretK3y_MySecretK3y_MySecretK3y_MySecretK3y_}
 resilience4j:
   circuitbreaker:
     instances:
@@ -71,9 +71,8 @@ logging:
     org.springdoc: "DEBUG"
 entrypoint:
   sqs:
-    region: "us-east-2"
-    #endpoint: "http://localhost:4566"
-    queueUrl: "https://sqs.us-east-2.amazonaws.com/812612912253/cola-actualizar-solicitudes"
+    region: ${SQS_ENTRYPOINT_REGION:us-east-2}
+    queueUrl: ${UPDATE_APPLICATIONS_QUEUE_URL:https://sqs.us-east-2.amazonaws.com/812612912253/cola-actualizar-solicitudes}
     waitTimeSeconds: 20
     maxNumberOfMessages: 10
     visibilityTimeoutSeconds: 10
